@@ -1,101 +1,195 @@
-# Deep Research Agent
+# Agentic Research Assistant
+### Intelligent Multi-Source Knowledge Synthesis Platform
 
-A multi-agent deep research system that plans, searches, reads, reflects, and synthesizes high-quality cited reports.
+An AI-powered research assistant designed to organize research tasks, coordinate multiple AI agents, review findings, identify information gaps, and generate structured research reports.
 
-**Web app**: Python FastAPI + LangGraph backend, Vanilla JS browser frontend. Self-hosted search, local document library RAG, zero paid scraping APIs.
+The project explores how Agentic AI and multi-agent workflows can simplify the research process by dividing complex questions into smaller tasks and combining the resulting findings.
 
-## Quick Start
+## Overview
 
-### Prerequisites
+Traditional research often requires users to search multiple websites, read different sources, organize information, and prepare a final report manually.
 
-- Python 3.12+ with [uv](https://docs.astral.sh/uv/)
-- Docker (for SearXNG)
-- An LLM API key (OpenRouter, Mimo, or any OpenAI-compatible provider)
-- (Optional) Google Chrome or Chromium — for Crawl4AI fallback on JS-rendered pages. If missing, run `playwright install chromium` after `uv sync`.
+The Agentic Research Assistant aims to automate parts of this process through an agent-based workflow. A user submits a research query, the system plans the research, executes subtasks, reviews the generated findings, identifies possible gaps, and synthesizes a report.
 
-### 1. Clone and install
+The current prototype demonstrates the core research workflow. Reliable source collection, evidence verification, and citation generation require further development and testing.
+
+## Key Features
+
+- **Research Planning:** Breaks a research question into smaller subtasks.
+- **Multi-Agent Execution:** Coordinates specialized agents to work on research tasks.
+- **Web Search Integration:** Uses SearXNG for web search.
+- **Workflow Orchestration:** Uses LangGraph to coordinate research stages.
+- **Reflection:** Reviews intermediate research outputs.
+- **Research Gap Analysis:** Identifies areas that may require additional investigation.
+- **Report Synthesis:** Combines findings into a structured research report.
+- **Web Interface:** Provides an interface for interacting with the research assistant.
+
+*Note: Source collection and report accuracy may vary. Evidence verification and dependable citation generation are areas for further improvement.*
+
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Programming Language | Python |
+| Backend Framework | FastAPI |
+| AI Model Integration | Groq API with an OpenAI-compatible client |
+| Language Model | Qwen model configured in the application |
+| Workflow Orchestration | LangGraph |
+| Web Search | SearXNG |
+| Frontend | Existing web interface using HTML, CSS, and JavaScript assets |
+| Development Environment | Visual Studio Code |
+| Search Deployment | Docker for local SearXNG setup |
+
+## System Architecture
+
+The application follows a workflow in which the user query passes through the backend and is processed by the research workflow.
+
+1. **User Input:** The user submits a research question.
+2. **Research Planning:** The system creates a plan and divides the question into subtasks.
+3. **Agent Execution:** Research agents process the assigned tasks.
+4. **Information Retrieval:** The workflow can use the configured SearXNG search service.
+5. **Reflection and Gap Analysis:** Intermediate findings are reviewed and potential gaps are identified.
+6. **Report Synthesis:** The language model combines the findings into a report.
+7. **Result Display:** The generated report is presented through the interface.
+
+## Project Structure
+
+Deep-Research-Agent/
+├── src/
+│   └── backend/
+│       ├── server.py
+│       ├── agents.py
+│       ├── graph.py
+│       ├── planning.py
+│       ├── search.py
+│       ├── react_agent.py
+│       ├── subagent.py
+│       ├── synthesis.py
+│       ├── llm.py
+│       ├── config.py
+│       ├── models.py
+│       ├── document_parser.py
+│       ├── document_store.py
+│       └── tools.py
+├── benchmarks/
+├── research-output/
+├── pyproject.toml
+├── uv.lock
+├── config.yaml.example
+├── .env.example
+├── .gitignore
+├── README.md
+└── test_groq.py
+```
+
+*The structure above highlights the main files visible in the project. Some additional files and folders may exist.*
+
+## Requirements
+
+- Python 3.12 or a compatible version supported by the project dependencies
+- Git
+- Docker, for the local SearXNG service
+- A Groq API key with access to the configured model
+- Internet connectivity for the API and web search services
+
+## Installation and Setup
+
+### 1. Clone the repository
 
 ```bash
-git clone <repo-url> && cd deep-research-agent
+git clone https://github.com/meghana-reddy-15/Deep-Research-Agent.git
+cd Deep-Research-Agent
+```
+
+### 2. Set up the Python environment
+
+Create and activate a virtual environment if you do not already have one.
+
+**Windows PowerShell:**
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+Install the project dependencies using the package manager and instructions supported by the project.
+
+If the project is configured for `uv`, use:
+
+```bash
 uv sync
 ```
 
-### 2. Configure LLM
+### 3. Configure the language model
 
-Create `~/.deep-research/config.yaml`:
+Create the required local configuration file using `config.yaml.example` as a reference. The application uses a configuration file under the user's `.deep-research` directory.
 
-```yaml
-providers:
-  openrouter:
-    api_key: sk-or-v1-...
+Configure the model name, API base URL, and API key according to the application's configuration format.
 
-default:
-  provider: openrouter
-  model: anthropic/claude-sonnet-4
+**Security:** Never commit API keys or private credentials to GitHub. Keep personal configuration files outside the repository or excluded by `.gitignore`.
 
-roles:
-  planner:     { provider: openrouter, model: anthropic/claude-sonnet-4 }
-  subagent:    { provider: openrouter, model: anthropic/claude-sonnet-4 }
-  coordinator: { provider: openrouter, model: anthropic/claude-sonnet-4 }
-  reflection:  { provider: openrouter, model: anthropic/claude-sonnet-4 }
+### 4. Start SearXNG
 
-research:
-  max_iterations: 2
-  quality_threshold: 0.6
-```
+Start the local SearXNG service using your Docker configuration and verify that it is accessible at the URL configured by the application.
 
-Or use environment variables:
+### 5. Start the backend
+
+From the project root, run:
 
 ```bash
-export OPENROUTER_API_KEY=sk-or-v1-...
-export LLM_PROVIDER=openrouter
-export LLM_MODEL=anthropic/claude-sonnet-4
+python -m uvicorn src.backend.server:app --host 127.0.0.1 --port 8787
 ```
 
-### 3. Start SearXNG
+### 6. Open the application
 
-```bash
-mkdir -p ~/searxng
-cd ~/searxng
-# Create docker-compose.yml and settings.yml (see docs/searxng-setup.md)
-docker compose up -d
-# Verify: curl "http://127.0.0.1:8080/search?q=test&format=json"
-```
+Open the configured local application URL in your browser:
 
-### 4. Run
+http://127.0.0.1:8787
 
-```bash
-uv run uvicorn src.backend.server:app --host 127.0.0.1 --port 8787
-# Then open http://127.0.0.1:8787 in your browser
-```
+The backend and search service must be configured correctly for the research workflow to operate.
 
-## Pipeline
+## Current Implementation Status
 
-```
-User Query
-  │
-  ▼
-init → plan → split → subagents → reflection → synthesize → cite → END
-```
+The prototype demonstrates:
 
-- **plan**: Structured research plan (dimensions + keywords + source types)
-- **split**: Break into 3–8 parallel subtasks
-- **subagents**: Each subagent searches the web + your document library, evaluates sources, extracts content, and writes a cited report
-- **reflection**: Quantitative per-dimension scoring; gaps trigger targeted re-search (up to max_iterations)
-- **synthesize**: Single-pass LLM synthesis with automatic truncation recovery and thin-section deepening
-- **cite**: Rule-based citation numbering + concurrent URL liveness verification
+- Research planning and task decomposition
+- Multi-agent workflow execution
+- Reflection and research gap analysis
+- Language-model-based report synthesis
+- Backend integration with the configured search and language-model services
 
-Subtask reports are deduplicated by `subtask_id` when reflection triggers re-runs, preventing duplicate content from reaching the synthesis stage.
+The following areas require further implementation, testing, or validation:
 
-## Document Library (RAG)
+- Reliable retrieval and registration of source content
+- Evidence-based factual verification
+- Consistent source attribution and citation generation
+- Evaluation of report accuracy and retrieval quality
+- Performance improvements for long-running research tasks
 
-Upload PDF, DOCX, TXT, MD, or HTML files into collections. The system uses:
-- **Chroma** vector store (semantic search)
-- **bm25s** + jieba (Chinese keyword search)
-- **RRF fusion** to combine both
+## Future Enhancements
 
-Documents are parsed, chunked, embedded, and indexed asynchronously. During research, your document library is searched in parallel with web search.
+- Document-based Retrieval-Augmented Generation (RAG)
+- Reliable evidence verification and source traceability
+- Automatic citation generation and validation
+- Improved source ranking and retrieval
+- Better detection of conflicting information
+- Research history and report export
+- Automated evaluation of research quality and factual accuracy
+
+## Security
+
+- Do not upload `.env` files, API keys, passwords, or personal configuration files.
+- Store credentials securely in local configuration or environment variables.
+- Review files and Git history before making the repository public.
+
+## Author
+
+**Meghana Reddy Kurapati**
+
+Information Science and Engineering Student
+
+GitHub: [@meghana-reddy-15](https://github.com/meghana-reddy-15)
 
 ## License
 
-MIT
+Refer to the repository's existing `LICENSE` file for licensing terms.
