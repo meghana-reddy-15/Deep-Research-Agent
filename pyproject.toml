@@ -1,7 +1,7 @@
 [project]
-name = "deep-research-agent"
+name = "agentic-research-assistant"
 version = "1.0.0"
-description = "Cross-platform deep research desktop application"
+description = "Agentic AI platform for multi-agent research, information retrieval, and knowledge synthesis"
 requires-python = ">=3.12"
 
 dependencies = [
